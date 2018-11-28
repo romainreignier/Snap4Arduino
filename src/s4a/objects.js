@@ -14,7 +14,7 @@ SpriteMorph.prototype.blockColor['arduino'] = new Color(24, 167, 181);
 SpriteMorph.prototype.originalInitBlocks = SpriteMorph.prototype.initBlocks;
 SpriteMorph.prototype.initArduinoBlocks = function () {
 
-    this.blocks.reportAnalogReading = 
+    this.blocks.reportAnalogReading =
     {
         only: SpriteMorph,
         type: 'reporter',
@@ -23,7 +23,7 @@ SpriteMorph.prototype.initArduinoBlocks = function () {
         transpilable: true
     };
 
-    this.blocks.reportDigitalReading = 
+    this.blocks.reportDigitalReading =
     {
         only: SpriteMorph,
         type: 'predicate',
@@ -84,7 +84,7 @@ SpriteMorph.prototype.initArduinoBlocks = function () {
         type: 'command',
         category: 'arduino',
         spec: 'set pin %pwmPin to value %n',
-	defaults: [null, 128],
+        defaults: [null, 128],
         transpilable: true
     };
 
@@ -97,7 +97,43 @@ SpriteMorph.prototype.initArduinoBlocks = function () {
         transpilable: false
     };
 
-    // Ardui... nization? 
+    this.blocks.pulseIn =
+    {
+        only: SpriteMorph,
+        type: 'reporter',
+        category: 'arduino',
+        spec: 'read a pulse on pin %digitalPin',
+        transpilable: true
+    };
+
+    this.blocks.delayMicroseconds =
+    {
+        only: SpriteMorph,
+        type: 'command',
+        category: 'arduino',
+        spec: 'wait %n microseconds',
+        transpilable: true
+    };
+
+    this.blocks.distance =
+    {
+        only: SpriteMorph,
+        type: 'reporter',
+        category: 'arduino',
+        spec: 'distance TRIG %digitalPin ECHO %digitalPin',
+        transpilable: true
+    };
+
+    this.blocks.moveRobot =
+    {
+        only: SpriteMorph,
+        type: 'command',
+        category: 'arduino',
+        spec: 'deplace robot Vitesse Gauche %n Vitesse Droite %n',
+        transpilable: true
+    };
+
+    // Ardui... nization?
     // Whatever, let's dumb this language down:
 
     this.blocks.receiveGo.transpilable = true;
@@ -171,6 +207,10 @@ SpriteMorph.prototype.initArduinoBlocks = function () {
     StageMorph.prototype.codeMappings['digitalWrite'] = '  s4a.digitalWrite(<#1>, <#2>);';
     StageMorph.prototype.codeMappings['servoWrite'] = '  s4a.servoWrite(<#1>, <#2>);';
     StageMorph.prototype.codeMappings['pwmWrite'] = '  s4a.analogWrite(<#1>, <#2>);';
+    StageMorph.prototype.codeMappings['pulseIn'] = '  s4a.pulseIn(<#1>)';
+    StageMorph.prototype.codeMappings['delayMicroseconds'] = '  s4a.delayMicroseconds(<#1>);';
+    StageMorph.prototype.codeMappings['distance'] = '  s4a.distance(<#1>, <#2>)';
+    StageMorph.prototype.codeMappings['moveRobot'] = '  s4a.moveRobot(<#1>, <#2>);';
 }
 
 SpriteMorph.prototype.initBlocks =  function() {
@@ -185,9 +225,9 @@ SpriteMorph.prototype.initBlocks();
 SpriteMorph.prototype.originalBlockTemplates = SpriteMorph.prototype.blockTemplates;
 SpriteMorph.prototype.blockTemplates = function (category) {
     var myself = this,
-        blocks = myself.originalBlockTemplates(category); 
+        blocks = myself.originalBlockTemplates(category);
 
-    //  Button that triggers a connection attempt 
+    //  Button that triggers a connection attempt
 
     this.arduinoConnectButton = new PushButtonMorph(
             null,
@@ -257,7 +297,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         reportAnalog = blockBySelector('reportAnalogReading'),
         digitalToggle = arduinoWatcherToggle('reportDigitalReading'),
         reportDigital = blockBySelector('reportDigitalReading');
-    
+
     if (reportAnalog) {
         reportAnalog.toggle = analogToggle;
     }
@@ -278,11 +318,16 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(blockBySelector('servoWrite'));
         blocks.push(blockBySelector('digitalWrite'));
         blocks.push(blockBySelector('pwmWrite'));
+        blocks.push(blockBySelector('pulseIn'));
         blocks.push('-');
         blocks.push(analogToggle);
         blocks.push(reportAnalog);
         blocks.push(digitalToggle);
         blocks.push(reportDigital);
+        blocks.push('-');
+        blocks.push(blockBySelector('distance'));
+        blocks.push(blockBySelector('delayMicroseconds'));
+        blocks.push(blockBySelector('moveRobot'));
 
     } else if (category === 'other') {
         button = new PushButtonMorph(
@@ -346,7 +391,7 @@ SpriteMorph.prototype.freshPalette = function (category) {
     palette.growth = new Point(0, MorphicPreferences.scrollBarSize);
 
     // toolbar:
-    
+
     palette.toolBar = new AlignmentMorph('column');
 
     searchButton = new PushButtonMorph(
@@ -596,7 +641,7 @@ SpriteMorph.prototype.freshPalette = function (category) {
 SpriteMorph.prototype.originalFullCopy = SpriteMorph.prototype.fullCopy;
 SpriteMorph.prototype.fullCopy = function (forClone) {
     var c = this.originalFullCopy(forClone);
-   
+
     if (!forClone) {
         c.arduino = new Arduino(c);
     }
@@ -707,7 +752,7 @@ SpriteMorph.prototype.arduinoWatcherFor = function (stage, selector, pin) {
         return morph instanceof WatcherMorph &&
             morph.getter === selector &&
             morph.target === (morph.isGlobal(selector) ? stage : myself) &&
-            morph.pin === pin; 
+            morph.pin === pin;
     });
 };
 
@@ -758,8 +803,8 @@ WatcherMorph.prototype.valueExporter = function (format) {
     return function () {
         switch (format) {
             case 'plain':
-                contents = value instanceof List ? 
-                    value.asArray().join('\n') : 
+                contents = value instanceof List ?
+                    value.asArray().join('\n') :
                     value.toString();
                 break;
             case 'json':

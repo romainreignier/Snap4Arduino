@@ -41,7 +41,7 @@ Process.prototype.setPinMode = function (pin, mode) {
 
     if (sprite.arduino.isBoardReady()) {
 
-        var board = sprite.arduino.board, 
+        var board = sprite.arduino.board,
             val;
 
         switch(mode[0]) {
@@ -53,9 +53,9 @@ Process.prototype.setPinMode = function (pin, mode) {
         }
 
         if (this.context.pinSet === undefined) {
-            if (board.pins[pin].supportedModes.indexOf(val) > -1) {	
+            if (board.pins[pin].supportedModes.indexOf(val) > -1) {
                 board.pinMode(pin, val);
-            } else { 
+            } else {
                 return null;
             }
         }
@@ -68,7 +68,7 @@ Process.prototype.setPinMode = function (pin, mode) {
         this.pushContext('doYield');
         this.pushContext();
     } else {
-        throw new Error(localize('Arduino not connected'));	
+        throw new Error(localize('Arduino not connected'));
     }
 };
 
@@ -120,7 +120,7 @@ Process.prototype.servoWrite = function (pin, value) {
         this.pushContext();
         return null;
     } else {
-        throw new Error(localize('Arduino not connected'));			
+        throw new Error(localize('Arduino not connected'));
     }
 
     this.isAtomic = true;
@@ -132,7 +132,7 @@ Process.prototype.reportAnalogReading = function (pin) {
 
     if (sprite.arduino.isBoardReady()) {
 
-        var board = sprite.arduino.board; 
+        var board = sprite.arduino.board;
 
         if (board.pins[board.analogPins[pin]].mode != board.MODES.ANALOG) {
             board.pinMode(board.analogPins[pin], board.MODES.ANALOG);
@@ -143,7 +143,7 @@ Process.prototype.reportAnalogReading = function (pin) {
         this.pushContext('doYield');
         this.pushContext();
     } else {
-        throw new Error(localize('Arduino not connected'));	
+        throw new Error(localize('Arduino not connected'));
     }
 };
 
@@ -152,7 +152,7 @@ Process.prototype.reportDigitalReading = function (pin) {
 
     if (sprite.arduino.isBoardReady()) {
 
-        var board = sprite.arduino.board; 
+        var board = sprite.arduino.board;
 
         if (board.pins[pin].mode != board.MODES.INPUT) {
             board.pinMode(pin, board.MODES.INPUT);
@@ -164,13 +164,88 @@ Process.prototype.reportDigitalReading = function (pin) {
         this.pushContext('doYield');
         this.pushContext();
     } else {
-        throw new Error(localize('Arduino not connected'));		
+        throw new Error(localize('Arduino not connected'));
+    }
+};
+
+Process.prototype.pulseIn = function (pin) {
+    var sprite = this.blockReceiver();
+
+    if (sprite.arduino.isBoardReady()) {
+
+        var board = sprite.arduino.board;
+
+        if (board.pins[pin].mode != board.MODES.INPUT) {
+            board.pinMode(pin, board.MODES.INPUT);
+        }
+
+        board.pulseIn(pin);
+
+        this.pushContext('doYield');
+        this.pushContext();
+    } else {
+        throw new Error(localize('Arduino not connected'));
+    }
+};
+
+Process.prototype.distance = function (trigPin, echoPin) {
+    var sprite = this.blockReceiver();
+
+    if (sprite.arduino.isBoardReady()) {
+
+        var board = sprite.arduino.board;
+
+        if (board.pins[trigPin].mode != board.MODES.OUTPUT) {
+            board.pinMode(trigPin, board.MODES.OUTPUT);
+        }
+
+        if (board.pins[echoPin].mode != board.MODES.INPUT) {
+            board.pinMode(trigPin, board.MODES.INPUT);
+        }
+
+        board.distance(trigPin, echoPin);
+
+        this.pushContext('doYield');
+        this.pushContext();
+    } else {
+        throw new Error(localize('Arduino not connected'));
+    }
+};
+
+Process.prototype.moveRobot = function (leftSpeed, rightSpeed) {
+    var sprite = this.blockReceiver();
+
+    if (sprite.arduino.isBoardReady()) {
+
+        var board = sprite.arduino.board;
+
+        board.moveRobot(leftSpeed, rightSpeed);
+
+        this.pushContext('doYield');
+        this.pushContext();
+    } else {
+        throw new Error(localize('Arduino not connected'));
+    }
+};
+
+Process.prototype.delayMicroseconds = function (value) {
+    var sprite = this.blockReceiver();
+
+    if (sprite.arduino.isBoardReady()) {
+
+        var board = sprite.arduino.board;
+        board.delayMicroseconds(value);
+
+        this.pushContext('doYield');
+        this.pushContext();
+    } else {
+        throw new Error(localize('Arduino not connected'));
     }
 };
 
 Process.prototype.digitalWrite = function (pin, booleanValue) {
     var sprite = this.blockReceiver();
-    
+
     this.popContext();
     sprite.startWarp();
     this.pushContext('doYield');
@@ -200,7 +275,7 @@ Process.prototype.pwmWrite = function (pin, value) {
     var sprite = this.blockReceiver();
 
     if (sprite.arduino.isBoardReady()) {
-        var board = sprite.arduino.board; 
+        var board = sprite.arduino.board;
 
         if (board.pins[pin].mode != board.MODES.PWM) {
             board.pinMode(pin, board.MODES.PWM);

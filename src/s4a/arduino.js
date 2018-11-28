@@ -1,7 +1,7 @@
 // utility functions
 unique = function (anArray) {
-    return anArray.filter(function (elem, pos) { 
-        return anArray.indexOf(elem) == pos; 
+    return anArray.filter(function (elem, pos) {
+        return anArray.indexOf(elem) == pos;
     });
 };
 
@@ -28,7 +28,7 @@ Arduino.prototype.keepAlive = function () {
             }
         } else {
             // Connection dropped! Let's disconnect!
-            this.disconnect(); 
+            this.disconnect();
         }
     }
 };
@@ -44,7 +44,7 @@ Arduino.prototype.disconnect = function (silent, force) {
                 if (!this.connecting || force) {
                     // otherwise something went wrong in the middle of a connection attempt
                     this.board.sp.close();
-                } 
+                }
             }
         }
         this.closeHandler(silent);
@@ -52,7 +52,7 @@ Arduino.prototype.disconnect = function (silent, force) {
         if (!silent) {
             ide.inform(this.owner.name, localize('Board is not connected'))
         }
-    } 
+    }
 };
 
 // This should belong to the IDE
@@ -104,7 +104,7 @@ Arduino.prototype.attemptConnection = function () {
 
                 if (portCount >= 1) {
                     Object.keys(ports).forEach(function (each) {
-                        portMenu.addItem(each, function () { 
+                        portMenu.addItem(each, function () {
                             myself.connect(each);
                         })
                     });
@@ -161,8 +161,8 @@ Arduino.prototype.closeHandler = function (silent) {
     if (this.gotUnplugged & !silent) {
         ide.inform(
                 this.owner.name,
-                localize('Board was disconnected from port\n') 
-                + portName 
+                localize('Board was disconnected from port\n')
+                + portName
                 + '\n\nIt seems that someone pulled the cable!');
         this.gotUnplugged = false;
     } else if (!silent) {
@@ -200,10 +200,10 @@ Arduino.prototype.verifyPort = function (port, okCallback, failCallback) {
     // The only way to know if this is a proper serial port is to attempt a connection
     try {
         chrome.serial.connect(
-                port, 
+                port,
                 { bitrate: 57600 },
-                function (info) { 
-                    if (info) { 
+                function (info) {
+                    if (info) {
                         chrome.serial.disconnect(info.connectionId, okCallback);
                     } else {
                         failCallback('Port ' + port + ' does not seem to exist');
@@ -240,7 +240,7 @@ Arduino.prototype.connect = function (port, verify, channel) {
             this.hostname);
 
         this.showMessage(localize('Connecting to network port:\n') +
-            this.hostname + '\n\n' + 
+            this.hostname + '\n\n' +
             localize('This may take a few seconds...'));
     } else {
         this.showMessage(localize('Connecting board at port\n') + port);
@@ -270,13 +270,13 @@ Arduino.prototype.connect = function (port, verify, channel) {
         myself.owner.parentThatIsA(StageMorph).threads.processes.forEach(
             function (process) {
                 if (process.topBlock.selector === 'connectArduino') {
-                    process.stop(); 
+                    process.stop();
                 }
             });
 
         if (err.code === 'EHOSTUNREACH') {
             ide.inform(
-                myself.owner.name, 
+                myself.owner.name,
                 localize('Unable to connect to board\n')
                     + myself.hostname + '\n\n'
                     + localize('Make sure the board is powered on'));
@@ -296,18 +296,18 @@ Arduino.prototype.connect = function (port, verify, channel) {
             netClient.destroy();
         }
 
-        myself.closeHandler(true); 
+        myself.closeHandler(true);
     };
 
     function doConnect () {
         if (channel === 'network') {
             port = this;
         }
-        
-        myself.board = new Arduino.firmata.Board(port, function (err) { 
+
+        myself.board = new Arduino.firmata.Board(port, function (err) {
             // Clear timeout to avoid problems if connection is closed before timeout is completed
-            clearTimeout(myself.connectionTimeout); 
-            if (!err) { 
+            clearTimeout(myself.connectionTimeout);
+            if (!err) {
                 // Start the keepAlive interval
                 myself.keepAliveIntervalID = setInterval(function() { myself.keepAlive() }, 5000);
 
@@ -333,14 +333,14 @@ Arduino.prototype.connect = function (port, verify, channel) {
                 myself.board.getArduinoBoardParam = nop;
                 myself.board.checkArduinoBoardParam = nop;
 
-                ide.inform(myself.owner.name, localize('An Arduino board has been connected. Happy prototyping!'));   
+                ide.inform(myself.owner.name, localize('An Arduino board has been connected. Happy prototyping!'));
             } else {
                 fail(err);
             }
             return;
         });
 
-        // Set timeout to check if device does not speak firmata (in such case new Board callback was never called, but board object exists) 
+        // Set timeout to check if device does not speak firmata (in such case new Board callback was never called, but board object exists)
         this.connectionTimeout = setTimeout(function () {
             // If !board.versionReceived, the board has not established a firmata connection
             if (myself.board && !myself.board.versionReceived) {
@@ -361,8 +361,8 @@ Arduino.prototype.connect = function (port, verify, channel) {
 };
 
 Arduino.prototype.isBoardReady = function () {
-    return ((this.board !== undefined) 
-            && (this.board.pins.length > 0) 
+    return ((this.board !== undefined)
+            && (this.board.pins.length > 0)
             && (!this.disconnecting));
 };
 
@@ -372,9 +372,9 @@ Arduino.prototype.pinsSettableToMode = function (aMode) {
         pinNumbers = {};
 
     this.board.pins.forEach(
-        function (each) { 
-            if (each.supportedModes.indexOf(aMode) > -1) { 
-                var number = myself.board.pins.indexOf(each).toString(); 
+        function (each) {
+            if (each.supportedModes.indexOf(aMode) > -1) {
+                var number = myself.board.pins.indexOf(each).toString();
                 pinNumbers[number] = number;
             }
         }
@@ -435,17 +435,17 @@ Arduino.getSerialPorts = function (callback) {
         portList = [],
         portcheck = /usb|DevB|rfcomm|acm|^com/i; // Not sure about rfcomm! We must dig further how bluetooth works in Gnu/Linux
 
-    chrome.serial.getDevices(function (devices) { 
-        if (devices) { 
-            devices.forEach(function (device) { 
+    chrome.serial.getDevices(function (devices) {
+        if (devices) {
+            devices.forEach(function (device) {
                 if (!myself.isPortLocked(device.path) && portcheck.test(device.path)) {
-                    portList[device.path] = device.path; 
+                    portList[device.path] = device.path;
                 }
             });
         }
         callback(portList);
     });
-    
+
 };
 
 /* Transpilation from Snap! to Arduino C sketches
@@ -470,7 +470,7 @@ Arduino.getSerialPorts = function (callback) {
  * - Lambda
  * - Sprites, Stage, Sounds, etc.
  * - Multiple boards
- * 
+ *
  */
 
 Arduino.transpile = function (body, hatBlocks) {
@@ -544,7 +544,7 @@ Arduino.headerMessage =
 Arduino.processBroadcasts = function (hatBlocks) {
     var myself = this,
         fullCode = '\n\n';
-    
+
     hatBlocks.forEach(function (each) {
         fullCode += myself.processBroadcast(each);
     });
@@ -649,6 +649,41 @@ Arduino.S4Afunctions =
     + '      pins[pin] = 0;\n'
     + '    }\n'
     + '   return ::analogRead(pin);\n'
+    + '  }\n\n'
+    + '  unsigned long pulseIn(int pin) {\n'
+    + '    if (pins[pin]){\n'
+    + '      pinMode(pin, INPUT);\n'
+    + '      pins[pin] = 0;\n'
+    + '    }\n'
+    + '    return ::pulseIn(pin, HIGH);\n'
+    + '  }\n\n'
+    + '  void delayMicroseconds(unsigned int value) {\n'
+    + '    ::delayMicroseconds(value);\n'
+    + '  }\n\n'
+    + '  int distance(int trigPin, int echoPin) {\n'
+    + '    digitalWrite(trigPin, LOW);\n'
+    + '    ::delayMicroseconds(2);\n'
+    + '    digitalWrite(trigPin, HIGH);\n'
+    + '    ::delayMicroseconds(10);\n'
+    + '    digitalWrite(trigPin, LOW);\n'
+    + '    unsigned long pulse = pulseIn(echoPin);\n'
+    + '    return pulse * 0.0340 / 2.0;\n'
+    + '  }\n\n'
+    + '  void moveMotor(int forwardPin, int backwardPin, int speed) {\n'
+    + '    if(speed >= 0) {\n'
+    + '      if(speed > 255) speed = 255;\n'
+    + '      digitalWrite(backwardPin, LOW);\n'
+    + '      analogWrite(forwardPin, speed);\n'
+    + '    }\n'
+    + '    else {\n'
+    + '      if(speed < -255) speed = -255;\n'
+    + '      digitalWrite(forwardPin, LOW);\n'
+    + '      analogWrite(backwardPin, -speed);\n'
+    + '    }\n'
+    + '  }\n\n'
+    + '  void moveRobot(int leftSpeed, int rightSpeed) {\n'
+    + '    moveMotor(10, 9, leftSpeed);\n'
+    + '    moveMotor(6, 5, rightSpeed);\n'
     + '  }\n\n'
     + '  void servoWrite(int pin, int value) {\n'
     + '    if (value == -1) {\n'
